@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum TransactionType {
+  IN
+  OUT
+}
+
+model Product {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  productId  String   @unique
+  name       String
+  category   String
+  quantity   Int      @default(0)
+  unitPrice  Float
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  transactions StockTransaction[]
+}
+
+model StockTransaction {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  productId String   @db.ObjectId
+  type      TransactionType
+  quantity  Int
+  note      String?
+  createdAt DateTime @default(now())
+
+  product   Product  @relation(fields: [productId], references: [id])
+}

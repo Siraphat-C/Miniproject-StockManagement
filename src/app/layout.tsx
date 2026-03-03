@@ -1,44 +1,60 @@
+"use client"; // ต้องเป็น client component เพื่อใช้ usePathname
+
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
 import "./globals.css";
-import { Separator } from "@/components/ui/separator"
 
-export const metadata: Metadata = {
-  title: "Stock management",
-  description: "Stock Management",
-};
+// metadata ต้องย้ายออกไปเป็น separate file หรือใช้ generateMetadata
+// เนื่องจาก layout กลายเป็น client component
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+const navLinks = [
+  { href: "/", label: "Dashboard", icon: "/dashboard.png" },
+  { href: "/inventory", label: "Inventory", icon: "/inventory.png" },
+  { href: "/stockmovement", label: "Stock Movement", icon: "/stockmm.png" },
+  { href: "/reports", label: "Reports", icon: "/report.png" },
+];
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
   return (
     <html lang="th">
-      <body className="bg-gray-100 text-gray-900">
-        <header className="bg-white">
-        <div className="flex flex-col items-center py-6">
-          <img
-            src="/headbg.png"
-            alt="Warehouse Logo"
-            width={150}
-            height={200}
-          />
-          <h1 className="text-xl font-bold mt-2">Stock Management</h1>
-          <p className="text-sm opacity-80">ระบบจัดการสต็อกสินค้า</p>
-          <br />
-        </div>
-        <div className="container mx-auto flex h-16 items-center px-4">
-          <nav className="flex flex-1 items-center justify-center space-x-25 text-sm font-medium">
-            <Link href="/" className="flex items-center gap-2 tecxt-slate-600 hover:text-gray-900 transition-colors"><img src="Dashboard.png" className="w-6 h-6"/>Dashboard</Link>
-            <Link href="/inventory" className="flex items-center gap-2 tecxt-slate-600 hover:text-slate-900 transition-colors"><img src="inventory.png" className="w-6 h-6"/>Inventory</Link>
-            <Link href="/stockmovement" className="flex items-center gap-2 tecxt-slate-600 hover:text-slate-900 transition-colors"><img src="stockmm.png" className="w-6 h-6"/>Stock Movement</Link>
-            <Link href="/reports" className="flex items-center gap-2 tecxt-slate-600 hover:text-slate-900 transition-colors"><img src="report.png" className="w-6 h-6"/>Reports</Link>
-          </nav>
-        </div>
+      <body className="relative min-h-screen bg-[url('/bg.png')] bg-cover bg-center">
+        <div className="absolute inset-0 bg-black/60 pointer-events-none" />
+
+        <header className="bg-white relative z-10 shadow-sm">
+          <div className="flex flex-col items-center py-5">
+            <h1 className="text-xl font-bold mt-1">Stock Management</h1>
+            <p className="text-sm text-gray-500">ระบบจัดการสต็อกสินค้า</p>
+          </div>
+          <div className="border-t border-gray-100">
+            <nav className="container mx-auto flex h-14 items-center justify-center gap-10 text-sm font-medium px-4">
+              {navLinks.map(({ href, label, icon }) => {
+                // ✅ active state: exact match สำหรับ "/" ใช้ includes สำหรับ nested
+                const isActive =
+                  href === "/" ? pathname === "/" : pathname.startsWith(href);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`flex items-center gap-2 transition-colors ${
+                      isActive
+                        ? "text-blue-600 font-semibold border-b-2 border-blue-600 pb-0.5"
+                        : "text-slate-600 hover:text-gray-900"
+                    }`}
+                  >
+                    <Image src={icon} width={20} height={20} alt={label} />
+                    {label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
         </header>
-        <Separator className="my-4" />
-        <main className="p-8">{children}</main>
+
+        <main className="p-8 relative z-10">{children}</main>
       </body>
     </html>
   );
