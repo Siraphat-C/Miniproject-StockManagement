@@ -1,4 +1,4 @@
-"use client"; // ต้องเป็น client component เพื่อใช้ usePathname
+"use client";
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -6,8 +6,6 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import "./globals.css";
 
-// metadata ต้องย้ายออกไปเป็น separate file หรือใช้ generateMetadata
-// เนื่องจาก layout กลายเป็น client component
 
 const navLinks = [
   { href: "/", label: "Dashboard", icon: "/dashboard.png" },
@@ -32,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="border-t border-gray-100">
             <nav className="container mx-auto flex h-14 items-center justify-center gap-10 text-sm font-medium px-4">
               {navLinks.map(({ href, label, icon }) => {
-                // ✅ active state: exact match สำหรับ "/" ใช้ includes สำหรับ nested
+
                 const isActive =
                   href === "/" ? pathname === "/" : pathname.startsWith(href);
                 return (

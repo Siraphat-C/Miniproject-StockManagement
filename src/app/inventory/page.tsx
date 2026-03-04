@@ -3,11 +3,11 @@
 import React, { useState } from "react";
 import { Search } from "lucide-react";
 import { getStockStatus } from "@/lib/utils";
-import { useProducts } from "@/hooks/useProducts"; // ← ใช้ custom hook
+import { useProducts } from "@/hooks/useProducts"; 
 
 export default function Inventory() {
   const [search, setSearch] = useState("");
-  const { products, isLoading, error } = useProducts(search); // ← แทน useEffect ทั้งก้อน
+  const { products, isLoading, error } = useProducts(search); 
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-fade-in pb-10">

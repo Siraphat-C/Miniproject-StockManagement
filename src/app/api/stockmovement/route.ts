@@ -37,7 +37,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// ✅ ใช้ createStockMovement() ที่แก้ race condition แล้ว
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

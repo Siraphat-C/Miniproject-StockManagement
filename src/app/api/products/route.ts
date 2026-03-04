@@ -26,7 +26,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// ✅ ใช้ generateProductId() แทน count() เพื่อป้องกัน ID ซ้ำ
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

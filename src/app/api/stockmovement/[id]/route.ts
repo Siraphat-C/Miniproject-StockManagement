@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { deleteStockMovement } from "@/lib/actions/stock.actions";
 
-// ✅ ใช้ deleteStockMovement() ที่ย้าย logic ออกแล้ว
+
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

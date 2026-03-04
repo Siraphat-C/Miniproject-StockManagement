@@ -48,9 +48,9 @@ export default function StockMovementPage() {
     };
     const debounceTimer = setTimeout(fetchProducts, 300);
     return () => clearTimeout(debounceTimer);
-  }, [search, fetchTrigger]);
+  }, [search, fetchTrigger])
 
-  // ✅ แก้ข้อ 3: เปลี่ยนชื่อ param จาก search → productId
+  
   const fetchHistory = useCallback(async (productId: string) => {
     try {
       const res = await fetch(`/api/stockmovement?productId=${encodeURIComponent(productId)}`);
