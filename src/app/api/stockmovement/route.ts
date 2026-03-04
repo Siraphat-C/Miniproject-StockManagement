@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { TransactionType } from "@prisma/client";
 import { createStockMovement } from "@/lib/actions/stock.actions";
 
-// ✅ เพิ่ม try/catch ใน GET
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -14,17 +13,28 @@ export async function GET(req: NextRequest) {
     const typeParam = searchParams.get("type");
 
     const movements = await prisma.stockTransaction.findMany({
-     where: {
-      ...(productId
-        ? { product: { productId: { equals: productId, mode: "insensitive" } } }
-        : search
-        ? {
-            OR: [
-              { product: { name: { contains: search, mode: "insensitive" } } },
-              { product: { productId: { contains: search, mode: "insensitive" } } },
-            ],
-          }
-        : {}),
+      where: {
+        // Filter by date range (Thailand UTC+7 → subtract 7hrs for UTC)
+        ...(from || to
+          ? {
+              createdAt: {
+                ...(from ? { gte: new Date(`${from}T00:00:00.000+07:00`) } : {}),
+                ...(to ? { lte: new Date(`${to}T23:59:59.999+07:00`) } : {}),
+              },
+            }
+          : {}),
+        // Filter by product
+        ...(productId
+          ? { product: { productId: { equals: productId, mode: "insensitive" } } }
+          : search
+          ? {
+              OR: [
+                { product: { name: { contains: search, mode: "insensitive" } } },
+                { product: { productId: { contains: search, mode: "insensitive" } } },
+              ],
+            }
+          : {}),
+        // Filter by type
         ...(typeParam ? { type: typeParam as TransactionType } : {}),
       },
       include: { product: true },
