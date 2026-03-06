@@ -11,7 +11,7 @@ export function getStockStatus(quantity: number): StockStatus {
   if (quantity === 0) {
     return { label: "Out of Stock", className: "bg-red-100 text-red-700" };
   }
-  if (quantity <= LOW_STOCK_THRESHOLD) { // ← ไม่ hardcode อีกต่อไป
+  if (quantity <= LOW_STOCK_THRESHOLD) { // 
     return { label: "Low Stock", className: "bg-yellow-100 text-yellow-700" };
   }
   return { label: "In Stock", className: "bg-green-100 text-green-700" };

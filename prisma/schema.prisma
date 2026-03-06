@@ -22,6 +22,7 @@ model Product {
   category   String
   quantity   Int      @default(0)
   unitPrice  Float
+  imageUrl   String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 

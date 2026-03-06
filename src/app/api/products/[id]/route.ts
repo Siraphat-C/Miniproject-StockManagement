@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// ✅ เพิ่ม try/catch ใน GET
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -23,11 +22,17 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { name, category, quantity, unitPrice } = body;
+    const { name, category, quantity, unitPrice, imageUrl } = body;
 
     const product = await prisma.product.update({
       where: { id },
-      data: { name, category, quantity: Number(quantity), unitPrice: Number(unitPrice) },
+      data: {
+        name,
+        category,
+        quantity: Number(quantity),
+        unitPrice: Number(unitPrice),
+        ...(imageUrl !== undefined ? { imageUrl: imageUrl || null } : {}),
+      },
     });
     return NextResponse.json(product);
   } catch (_error) {

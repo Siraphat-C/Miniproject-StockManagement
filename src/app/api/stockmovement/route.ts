@@ -1,20 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { TransactionType } from "@prisma/client";
-import { createStockMovement } from "@/lib/actions/stock.actions";
+import { createStockMovement } from "@/lib/actions/stock_actions";
+
+const PRODUCT_SELECT = {
+  id: true,
+  productId: true,
+  name: true,
+  unitPrice: true,
+} as const;
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
-    const productId = searchParams.get("productId") || "";
+    const productDbId = searchParams.get("productDbId") || "";
     const from = searchParams.get("from");
     const to = searchParams.get("to");
     const typeParam = searchParams.get("type");
 
     const movements = await prisma.stockTransaction.findMany({
       where: {
-        // Filter by date range (Thailand UTC+7 → subtract 7hrs for UTC)
         ...(from || to
           ? {
               createdAt: {
@@ -23,27 +29,32 @@ export async function GET(req: NextRequest) {
               },
             }
           : {}),
-        // Filter by product
-        ...(productId
-          ? { product: { productId: { equals: productId, mode: "insensitive" } } }
+        ...(productDbId
+          ? { productId: productDbId }
           : search
           ? {
               OR: [
                 { product: { name: { contains: search, mode: "insensitive" } } },
-                { product: { productId: { contains: search, mode: "insensitive" } } },
+                {
+                  product: {
+                    productId: { contains: search, mode: "insensitive" },
+                  },
+                },
               ],
             }
           : {}),
-        // Filter by type
         ...(typeParam ? { type: typeParam as TransactionType } : {}),
       },
-      include: { product: true },
+      include: { product: { select: PRODUCT_SELECT } },
       orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json(movements);
   } catch (_error) {
-    return NextResponse.json({ error: "Failed to fetch movements" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch movements" },
+      { status: 500 }
+    );
   }
 }
 
@@ -61,7 +72,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(movement, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to create movement";
+    const message =
+      error instanceof Error ? error.message : "Failed to create movement";
     const status = message === "จำนวนสินค้าไม่เพียงพอ" ? 400 : 500;
     return NextResponse.json({ error: message }, { status });
   }

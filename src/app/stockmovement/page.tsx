@@ -1,59 +1,35 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { Search, History, ArrowUp, Package, Trash2 } from "lucide-react";
-import type { Product, StockMovement } from "@/types";
+import React, { useState, useCallback } from "react";
+import { Search, History, ArrowUp, Package, Trash2, PlusCircle } from "lucide-react";
+import type { ProductListItem, StockMovement } from "@/types";
 import { getStockStatus } from "@/lib/utils";
 import { Toast } from "@/components/Toast";
 import { AddProductModal } from "@/components/modals/AddProductModal";
 import { UpdateStockModal } from "@/components/modals/UpdateStockModal";
 import { ProductHistoryModal } from "@/components/modals/ProductHistoryModal";
-import { PlusCircle } from "lucide-react";
-
-// ---- Toast state type ----
-interface ToastState {
-  message: string;
-  type: "success" | "error";
-}
+import { useProducts } from "@/hooks/useProducts";
+import { useToast } from "@/hooks/useToast";
 
 export default function StockMovementPage() {
-  const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
-  const [fetchTrigger, setFetchTrigger] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [toast, setToast] = useState<ToastState | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { products, isLoading } = useProducts(search, refreshTrigger);
+  const { toast, showToast, clearToast } = useToast();
 
-  // Modal visibility
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showUpdateStock, setShowUpdateStock] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-
-  // Selected product and its transaction history
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ProductListItem | null>(null);
   const [productHistory, setProductHistory] = useState<StockMovement[]>([]);
 
-  // ---- Data fetching ----
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      try {
-        const res = await fetch(`/api/products?search=${encodeURIComponent(search)}`);
-        const data = await res.json();
-        setProducts(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Failed to fetch products", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    const debounceTimer = setTimeout(fetchProducts, 300);
-    return () => clearTimeout(debounceTimer);
-  }, [search, fetchTrigger])
+  const handleRefresh = () => setRefreshTrigger((prev) => prev + 1);
 
-  
-  const fetchHistory = useCallback(async (productId: string) => {
+  const fetchHistory = useCallback(async (productDbId: string) => {
     try {
-      const res = await fetch(`/api/stockmovement?productId=${encodeURIComponent(productId)}`);
+      const res = await fetch(
+        `/api/stockmovement?productDbId=${encodeURIComponent(productDbId)}`
+      );
       const data = await res.json();
       setProductHistory(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -61,13 +37,7 @@ export default function StockMovementPage() {
     }
   }, []);
 
-  // ---- Handlers ----
-  const handleRefresh = () => setFetchTrigger((prev) => prev + 1);
-
-  const showToast = (message: string, type: "success" | "error") =>
-    setToast({ message, type });
-
-  const handleDeleteProduct = async (item: Product) => {
+  const handleDeleteProduct = async (item: ProductListItem) => {
     const confirmed = window.confirm(
       `ยืนยันการลบสินค้า?\n\nรหัส: ${item.productId}\nชื่อ: ${item.name}\n\nการลบจะไม่สามารถกู้คืนได้`
     );
@@ -86,24 +56,19 @@ export default function StockMovementPage() {
     }
   };
 
-  // ---- Derived values ----
   const totalProducts = products.length;
   const totalItemsInStock = products.reduce((sum, p) => sum + p.quantity, 0);
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-fade-in pb-10">
-
-      {/* Toast */}
       {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
+        <Toast message={toast.message} type={toast.type} onClose={clearToast} />
       )}
 
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-        <h2 className="text-lg font-semibold text-white">Stock Movement / การจัดการสต็อก</h2>
+        <h2 className="text-lg font-semibold text-white">
+          Stock Movement / การจัดการสต็อก
+        </h2>
         <button
           onClick={() => setShowAddProduct(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2"
@@ -178,8 +143,13 @@ export default function StockMovementPage() {
               products.map((item) => {
                 const { className: stockClass } = getStockStatus(item.quantity);
                 return (
-                  <tr key={item.id} className="hover:bg-gray-50 transition-colors group">
-                    <td className="px-6 py-4 font-bold text-gray-800">{item.productId}</td>
+                  <tr
+                    key={item.id}
+                    className="hover:bg-gray-50 transition-colors group"
+                  >
+                    <td className="px-6 py-4 font-bold text-gray-800">
+                      {item.productId}
+                    </td>
                     <td className="px-6 py-4 text-gray-800">{item.name}</td>
                     <td className="px-6 py-4 text-gray-600">{item.category}</td>
                     <td className="px-6 py-4 text-center">
@@ -192,7 +162,7 @@ export default function StockMovementPage() {
                         <button
                           onClick={() => {
                             setSelectedProduct(item);
-                            fetchHistory(item.productId);
+                            fetchHistory(item.id); 
                             setShowHistory(true);
                           }}
                           className="bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1"
@@ -233,7 +203,6 @@ export default function StockMovementPage() {
           onToast={showToast}
         />
       )}
-
       {showUpdateStock && selectedProduct && (
         <UpdateStockModal
           product={selectedProduct}
@@ -242,7 +211,6 @@ export default function StockMovementPage() {
           onToast={showToast}
         />
       )}
-
       {showHistory && selectedProduct && (
         <ProductHistoryModal
           product={selectedProduct}

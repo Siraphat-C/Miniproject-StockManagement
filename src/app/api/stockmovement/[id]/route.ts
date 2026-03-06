@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteStockMovement } from "@/lib/actions/stock.actions";
+import { deleteStockMovement } from "@/lib/actions/stock_actions";
 
 
 export async function DELETE(
